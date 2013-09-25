@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>toothy.js toolkit</title>
+<meta charset="UTF-8" />
+<script src="../src/toothy.js"></script>
+<script src="../lib/perlin/perlin.js"></script>
+<script>
+var
+	perlin = new Perlin(undefined,false),
+	render = document.createElement('canvas')
+;
+render.width = render.height = 800;
+window.onload = function(){
+	document.body.appendChild(render);
+	var
+		form = document.querySelector('form'),
+		ctx = render.getContext('2d'),
+		presetChanged = function(){
+			gear = new toothy.preset[form.querySelector('select').value]({
+				radius : form.querySelector('#radius').value,
+				teeth :form.querySelector('#teeth').value,
+				toothHeight : form.querySelector('#toothHeight').value,
+				padding:  form.querySelector('#padding').value,
+				noiseCallback : function(x, y, width, height){
+					return perlin.noise(x * Math.pow(width, .1), y * Math.pow(height, .1));
+				}
+			});
+			draw = gear.draw(true);
+			ctx.clearRect(0, 0, 800, 800);
+			ctx.drawImage(draw, 400 - (draw.width / 2), 400 - (draw.width / 2));
+		},
+		requestAnimationFrame = requestAnimationFrame || function(cb){ setTimeout(cb, 1000 / 60); },
+		counter = 0,
+		doAnimation = function(){
+			if(animate){
+				var
+					speedEl = form.querySelector('#speed'),
+					speed = ((speedEl.max - speedEl.value) + 1) * 100
+				;
+				ctx.clearRect(0, 0, 800, 800);
+				ctx.save();
+				ctx.translate(400, 400);
+				ctx.rotate((Math.PI * 2) * (counter / speed));
+				ctx.drawImage(draw, (draw.width / -2), (draw.width / -2));
+				++counter;
+				counter %= speed;
+				ctx.restore();
+				requestAnimationFrame(doAnimation);
+			}
+		},
+		animate = false,
+		draw,
+		gear
+	;
+
+	for(var i in toothy.preset){
+		if(toothy.preset.hasOwnProperty(i)){
+			var
+				option = document.createElement('option'),
+				label  = i,
+				labelParts = [],
+				labelPart = ''
+			;
+			for(var j=0;j<i.length;++j){
+				if(i[j] == i[j].toUpperCase()){
+					labelParts.push(labelPart);
+					labelPart = '';
+				}
+				labelPart += i[j];
+			}
+			labelParts.push(labelPart);
+			labelParts[0][0] = labelParts[0][0].toUpperCase();
+			option.value = i;
+			option.appendChild(document.createTextNode(labelParts.join(' ')));
+			form.querySelector('select').appendChild(option);
+		}
+	}
+	form.querySelector('select > option').selected = true;
+	presetChanged();
+	form.onsubmit = function(e){
+		e.preventDefault();
+		return false;
+	}
+	form.querySelector('#animate').onclick = function(){
+		animate = !animate;
+		doAnimation();
+		this.textContent = animate ? 'Stop Animating' : 'Animate';
+	}
+	form.oninput = form.onchange = function(e){
+		switch(e.target.nodeName){
+			case 'INPUT':
+				form.querySelector('#padding').setAttribute('max', form.querySelector('#radius').value);
+				var
+					output = form.querySelector('output[for="' + e.target.id + '"]'),
+					id = e.target.id,
+					opts = {}
+				;
+				while(output.hasChildNodes()){
+					output.removeChild(output.firstChild);
+				}
+				output.appendChild(document.createTextNode(e.target.value));
+				if(e.target.id != 'speed'){
+					opts[id] = e.target.value;
+					gear.options(opts);
+					ctx.clearRect(0,0,800,800);
+					draw = gear.draw(true);
+					ctx.drawImage(draw, 400 - (draw.width / 2), 400 - (draw.width / 2));
+				}
+			break;
+			case 'SELECT':
+				presetChanged();
+			break;
+		}
+	}
+}
+</script>
+<style>
+form{
+	position: absolute ;
+}
+canvas{
+	background: #fff ;
+}
+</style>
+</head>
+<body>
+<form>
+	<fieldset>
+		<legend>Toolkit</legend>
+		<ul>
+			<li><label for=preset>Preset: </label><select id=preset></select></li>
+			<li><label for=radius>Radius: </label><input id=radius type=range min=20 max=350 step=1 value=100><output for=radius>100</output></li>
+			<li><label for=teeth>Teeth: </label><input id=teeth type=range min=1 max=100 step=1 value=5><output for=teeth>5</output></li>
+			<li><label for=toothHeight>Tooth Height: </label><input id=toothHeight type=range min=-300 max=300 step=1 value=10><output for=toothHeight>10</output></li>
+			<li><label for=padding>Padding: </label><input id=padding type=range min=0 max=300 step=1 value=10><output for=padding>10</output></li>
+		</ul>
+	</fieldset>
+	<fieldset>
+		<legend>Animation</legend>
+		<ul>
+			<li><label for=speed>Speed: </label><input id=speed type=range min=1 max=10 value=5><output for=speed>5</output></li>
+		</ul>
+		<button id=animate type=submit>Animate</button>
+	</fieldset>
+</form>
+</body>
+</html>
