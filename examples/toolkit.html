@@ -94,6 +94,17 @@ window.onload = function(){
 		doAnimation();
 		this.textContent = animate ? 'Stop Animating' : 'Animate';
 	}
+	form.querySelector('#save').onclick = function(){
+		var
+			 a = document.createElement('a')
+		;
+		if('download' in a){
+			a.setAttribute('download', 'toothy.png');
+			a.href = render.toDataURL('image/png');
+			a.click();
+		}
+		return false;
+	}
 	form.oninput = form.onchange = function(e){
 		switch(e.target.nodeName){
 			case 'INPUT':
@@ -119,6 +130,10 @@ window.onload = function(){
 				presetChanged();
 			break;
 		}
+	}
+
+	if(!('download' in document.createElement('a'))){
+		form.querySelector('#save').disabled = true;
 	}
 }
 </script>
@@ -150,6 +165,7 @@ canvas{
 			<li><label for=speed>Speed: </label><input id=speed type=range min=1 max=10 value=5><output for=speed>5</output></li>
 		</ul>
 		<button id=animate type=submit>Animate</button>
+		<button id=save>Save</button>
 	</fieldset>
 </form>
 </body>
