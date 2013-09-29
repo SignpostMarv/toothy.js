@@ -155,24 +155,20 @@
 		},
 		paddedFilled = function(options){
 			paddedOutline['call'](this, options);
+		},
+		noised = function(options){
+			outline['call'](this, options);
+		},
+		paddedNoised = function(options){
+			paddedOutline['call'](this, options);
 		}
 	;
-	[
-		outline
-	].forEach(function(e){
-		extend(e, toothy);
-	});
-	[
-		paddedOutline,
-		filled
-	].forEach(function(e){
-		extend(e, outline);
-	});
-	[
-		paddedFilled
-	].forEach(function(e){
-		extend(e, paddedOutline);
-	});
+	extend(outline, toothy);
+		extend(paddedOutline, outline);
+			extend(paddedFilled, paddedOutline);
+				extend(paddedNoised, paddedFilled);
+		extend(filled, outline);
+			extend(noised, filled);
 
 	outline.prototype['draw'] = outline.prototype.draw = function(force){
 		force = force || this.cache.draw == undefined;
@@ -286,6 +282,9 @@
 
 	filled.prototype['options'] = function(options){
 		outline.prototype['options']['call'](this, options);
+	}
+	noised.prototype['options'] = function(options){
+		filled.prototype['options']['call'](this, options);
 		if(hasOwn(options, 'noiseCallback')){
 			this.opts.noiseCallback = options['noiseCallback'];
 		}
@@ -350,6 +349,9 @@
 
 	paddedFilled.prototype['options'] = function(options){
 		paddedOutline.prototype['options']['call'](this, options);
+	}
+	paddedNoised.prototype['options'] = function(options){
+		paddedFilled.prototype['options']['call'](this, options);
 		if(hasOwn(options, 'noiseCallback')){
 			this.opts.noiseCallback = options['noiseCallback'];
 		}
@@ -456,9 +458,11 @@
 
 	toothy['preset'] = {
 		'paddedFilled'  : paddedFilled,
-		'outline'       : outline,
 		'paddedOutline' : paddedOutline,
-		'filled'        : filled
+		'paddedNoised'  : paddedNoised,
+		'outline'       : outline,
+		'filled'        : filled,
+		'noised'        : noised
 	}
 	window['toothy'] = toothy;
 })(window);
